@@ -77,7 +77,7 @@ def get_relay_info():
         values = response.json()
         return(values)
     except Exception as error:
-        print(f"Error:'{error}' while gathering relay info from '{url}'.\nCannot proceed without relay info. Are you sure you have ntlmrelayx running?")
+        print(f"Error: '{error}' while gathering relay info from '{url}'.\nCannot proceed without relay info. Are you sure you have ntlmrelayx running?")
         sys.exit(1)
 
 
