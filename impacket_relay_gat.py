@@ -94,7 +94,7 @@ def list_shares(relay_user, relay_host, relay_port, is_admin):
         proc = run(['proxychains', 'smbclient.py', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE,
             input=input, encoding='ascii')
         print(proc.stdout)
-        with open(f'smb_shares.{relay_user.replace("/", ".")}.{relay_host}.txt', 'w+') as file:
+        with open(f'smb_shares.{relay_user.replace("/", ".")}.{relay_host}.txt', 'a') as file:
             file.write(f'{proc.stdout}')
     except Exception as error:
         print(f"Error: '{error}' listing SMB shares as '{connection_string}'.")
@@ -160,7 +160,7 @@ def list_databases(relay_user, relay_host, relay_port):
         proc = run(['proxychains', 'mssqlclient.py', '-windows-auth', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE,
             input=input, encoding='ascii')
         print(proc.stdout)
-        with open(f'mssql_databases.{relay_user.replace("/", ".")}.{relay_host}.txt', 'w+') as file:
+        with open(f'mssql_databases.{relay_user.replace("/", ".")}.{relay_host}.txt', 'a') as file:
             file.write(f'{proc.stdout}')
     except Exception as error:
         print(f"Error: '{error}' listing MSSQL databases as '{connection_string}'.")
