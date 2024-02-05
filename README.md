@@ -31,23 +31,17 @@ To install NTLM Relay Gat, follow these steps:
 
 1. Ensure that Python 3.6 or higher is installed on your system.
 
-2. Install Impacket, which is a dependency for Relay Gat. You can obtain it from [Impacket's GitHub repository](https://github.com/fortra/impacket) or install it using pip:
-
-```bash
-pip install impacket
-```
-
-The other dependencies should already be present in your Python installation. If not, install them using pip:
-
-```bash
-pip install requests
-```
-
-Clone the Relay Gat repository:
+2. Clone NTLM Relay Gat repository:
 
 ```bash
 git clone https://github.com/ad0nis/ntlm_relay_gat.git
 cd ntlm_relay_gat
+```
+
+3. Install dependencies.:
+
+```bash
+pip install -r requirements.txt
 ```
 
 NTLM Relay Gat is now installed and ready to use.
