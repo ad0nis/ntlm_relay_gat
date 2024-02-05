@@ -10,7 +10,8 @@ import argparse
 from datetime import datetime
 
 
-def main():    
+def main():
+    print_banner()
     # Create the parser
     parser = argparse.ArgumentParser(description='Relay-Gat: A tool to automate the exploitation of ntlmrelayx relays.')
 
@@ -65,6 +66,29 @@ def validate_arguments(args):
         if args.mssql_method is None:
             print("Error: --mssql-method is required when --mssql-exec is selected.")
             sys.exit(1)
+
+
+def print_banner():
+    print('''⠀⠀⠀⠀⠀⢀⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⢀⡀⣈⡉⠻⣿⣿⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀.___                            __           __   ⠀
+⠀⢀⣾⣧⣉⠁⣠⣿⣿⣿⣧⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀|   | _____ ___________    ____|  | __ _____/  |_ ⠀
+⠀⢸⣿⣿⣿⣿⣿⣿⣿⣿⡟⢸⣷⡀⠀⣀⣀⠀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀|   |/     \\____ \__  \ _/ ___\|  |/ // __ \   __\⠀⠀
+⠀⠈⢿⣿⣿⣿⣿⣿⣿⡟⢁⣾⣿⣿⣦⠈⢿⠀⣷⠀⠀⠀⠀⠀⠀⠀⠀⠀|   |  Y Y  \  |_> > __ \\  \___|    <\  ___/|  |  ⠀⠀
+⠀⠀⠀⠙⠛⠛⠛⠛⢉⣴⣿⣿⣿⣿⣿⠇⢸⠀⠁⠶⢀⡀⠀⠀⠀⠀⠀⠀|___|__|_|  /   __(____  /\___  >__|_ \\___  >__|  ⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣉⡉⠙⠛⢁⣠⣿⠀⡇⣴⠄⣁⠀⠀⠀⠀⠀⠀⠀         \/|__|       \/     \/     \/    \/      ⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠉⠉⠉⠉⠉⠉⠉⠀⠑⢠⡤⢉⠀⠀⠀⠀⠀⠀⠀__________       .__                               ⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢀⣄⠉⢉⣠⠈⠛⠒⣤⡈⠛⠀⠀⠀⠀⠀⠀\______   \ ____ |  | _____  ___.__.               ⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⣾⠋⠀⡄⢻⣧⠀⠀⠈⣴⠙⣂⠀⠀⠀⠀⠀ |       _// __ \|  | \__  \<   |  |               ⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡿⠃⠀⠀⢸⡄⠹⣇⠀⠀⢠⣦⠈⡁⠀⠀⠀⠀ |    |   \  ___/|  |__/ __ \\___  |               ⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡿⠁⠀⠀⠀⠀⠟⠀⠹⣆⠀⠀⠠⣦⠈⣀⠀⠀⠀ |____|_  /\___  >____(____  / ____|               ⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⣰⡟⠀⠀⠀⠀⠀⠀⠀⠀⠀⢻⣆⠀⠀⠀⣶⠄⠀⠀⠀⠀       \/     \/          \/\/                    
+⠀⠀⠀⠀⠀⠀⠀⠈⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠛⠁⠀⠀⠀⠶⠀⣠⡀⠀    ________        __                               
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀   /  _____/_____ _/  |_                             
+"He taught me how to driveby."  /   \  ___\__  \\   __\                            
+                                \    \_\  \/ __ \|  |                              
+ By ad0nis (Aaron Pohl)          \______  (____  /__|                              
+ and fin3ss3g0d (Dylan Evans)           \/     \/                                  
+ ''')
 
 
 def get_current_datetime_string():
