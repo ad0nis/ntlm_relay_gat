@@ -19,7 +19,7 @@ NTLM Relay Gat is a powerful tool designed to automate the exploitation of NTLM 
 
 Before you begin, ensure you have met the following requirements:
 
-- `proxychains` properly configured with Impacket SOCKS relay port
+- `proxychains` properly configured with ntlmrelayx SOCKS relay port
 - Python 3.6+
 - Impacket
 - Concurrent Futures Module (included in Python 3.2+)
@@ -38,7 +38,7 @@ git clone https://github.com/ad0nis/ntlm_relay_gat.git
 cd ntlm_relay_gat
 ```
 
-3. Install dependencies.:
+3. Install dependencies, if you don't have them installed already:
 
 ```bash
 pip install -r requirements.txt
