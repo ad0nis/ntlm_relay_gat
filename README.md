@@ -23,7 +23,10 @@ Before you begin, ensure you have met the following requirements:
 - Python 3.6+
 
 ## Installation
+### PyPi
+`pipx install ntlm-relay-gat`
 
+### Dev / Manual
 To install NTLM Relay Gat, follow these steps:
 
 1. Ensure that Python 3.6 or higher is installed on your system.
