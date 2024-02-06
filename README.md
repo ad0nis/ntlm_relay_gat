@@ -45,7 +45,7 @@ NTLM Relay Gat is now installed and ready to use.
 
 ## Usage
 
-To use NTLM Relay Gat, execute the script with the desired options. Here are some examples of how to run NTLM Relay Gat:
+To use NTLM Relay Gat, make sure you've got relayed sessions in `ntlmrelayx.py`'s `socks` command output and that you have proxychains configured to use `ntlmrelayx.py`'s proxy, and then execute the script with the desired options. Here are some examples of how to run NTLM Relay Gat:
 
 ```bash
 # List available SMB shares using 10 threads
