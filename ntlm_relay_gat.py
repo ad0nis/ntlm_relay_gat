@@ -44,7 +44,7 @@ def main():
     # Make a request for the relay info against localhost
     relay_info = get_relay_info()
     # Handles each protocol ntlmrelayx supports and runs appropriate exploits based on selections
-    handle_relay_info(relay_info)
+    handle_relay_info(relay_info, args)
 
 
 def validate_arguments(args):
